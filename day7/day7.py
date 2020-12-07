@@ -65,38 +65,40 @@ def parse_rule(line: str) -> Rule:
     return Rule(color=rule_color, contains=contains)
 
 
-def which_colors_can_contains(
+def which_colors_can_contain(
             rules: List[Rule],
             target_color: str,
         ) -> Set[str]:
     """
     Returns a list of colors that can eventually contain the target color according
     to the rules.
-    Assumes there are not loops in the rules.
+    Assumes there are no loops in the rules.
 
     :param rules: the list of containment rules.
     :param target_color: the colors to be contained.
     """
-    can_contain = set()
+    # Build a dict which maps each color to the list of colors which contain it.
+    containment_map = {}
     for rule in rules:
-        if rule.color in can_contain:
-            continue
+        for quantity, contained_color in rule.contains:
+            containment_map.setdefault(contained_color, [])
+            containment_map[contained_color].append(rule.color)
 
-        if rule.can_contain(target_color):
-            can_contain.add(rule.color)
-            # Find "transitive" containers recursively
-            can_contain.update(which_colors_can_contains(
-                rules,
-                rule.color,
-            ))
+    # Inner recursive function which traverses the containment_map
+    def _which_colors_can_contain(target_color: str) -> Set[str]:
+        can_contain = set()
+        for color in containment_map.get(target_color, []):
+            can_contain.add(color)
+            can_contain.update(_which_colors_can_contain(color))
+        return can_contain
 
-    return can_contain
+    return _which_colors_can_contain(target_color)
 
 
 def count_bags_inside(rules: List[Rule], target_color: str) -> int:
     """
     Returns how many bags must be contained inside a bag of target_color, recursively.
-    Assumes there are not loops in the rules.
+    Assumes there are no loops in the rules.
     Assumes there is only one rule for each color.
     """
     count = 0
@@ -126,7 +128,7 @@ def main():
         rules = [parse_rule(l) for l in lines]
 
     with timeit():
-        can_contain = which_colors_can_contains(rules, 'shiny gold')
+        can_contain = which_colors_can_contain(rules, 'shiny gold')
         print(f"{len(can_contain)} colors can contain shiny gold")
 
     with timeit():

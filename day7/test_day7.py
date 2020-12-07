@@ -1,4 +1,4 @@
-from day7 import Rule, count_bags_inside, parse_rule, which_colors_can_contains
+from day7 import Rule, count_bags_inside, parse_rule, which_colors_can_contain
 
 
 def test_parse_rule():
@@ -25,8 +25,8 @@ def test_parse_rule():
         assert parse_rule(line) == rule
 
 
-def test_which_colors_can_contains():
-    which_colors = which_colors_can_contains(
+def test_which_colors_can_contain():
+    which_colors = which_colors_can_contain(
         rules=[
             Rule(color='light red', contains=[(1, 'bright white'), (2, 'muted yellow')]),
             Rule(color='dark orange', contains=[(3, 'bright white'), (4, 'muted yellow')]),
