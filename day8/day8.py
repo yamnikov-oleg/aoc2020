@@ -131,7 +131,7 @@ def main():
             # Skip this one, we're searching for the program without loops
             continue
 
-        print(f"Found a modification with a loop, accumulator: {vm.accumulator}")
+        print(f"Found a modification without a loop, accumulator: {vm.accumulator}")
 
 
 if __name__ == "__main__":
