@@ -86,6 +86,65 @@ class Area:
 
         return new_area
 
+    def get_first_visible_seat(
+                self, row: int, column: int, dir: Tuple[int, int],
+            ) -> Tuple[int, int, CellState]:
+        """
+        Returns the row and the column of the first seat visible from
+        the given cell in the given direction.
+
+        :param dir: a tuple of row delta and column delta. E.g.:
+            (-1, 0) = up
+            (-1, 1) = up right
+            (0, -1) = left
+        """
+        dir_row, dir_col = dir
+        cur_row = row + dir_row
+        cur_col = column + dir_col
+
+        while True:
+            cur_state = self.get(cur_row, cur_col)
+
+            if cur_state != CellState.FLOOR or cur_state is None:
+                break
+
+            cur_row += dir_row
+            cur_col += dir_col
+
+        return cur_row, cur_col, cur_state
+
+    def step2(self) -> 'Area':
+        """
+        Advances the waiting area state by one step using the second algorithm.
+        Returns the updated area. The original area is unchanged.
+        """
+        new_area = self.clone()
+        for row, column, old_state in self:
+            if old_state == CellState.FLOOR:
+                continue
+
+            dirs = [
+                (-1, -1), (-1, 0), (-1, +1),
+                (0,  -1),          (0,  +1),
+                (+1, -1), (+1, 0), (+1, +1),
+            ]
+            adj_occupied_count = 0
+            for dir in dirs:
+                _, _, first_vis_seat = self.get_first_visible_seat(row, column, dir)
+                if first_vis_seat == CellState.SEAT_OCCUPIED:
+                    adj_occupied_count += 1
+
+            if old_state == CellState.SEAT_EMPTY and adj_occupied_count == 0:
+                new_state = CellState.SEAT_OCCUPIED
+            elif old_state == CellState.SEAT_OCCUPIED and adj_occupied_count >= 5:
+                new_state = CellState.SEAT_EMPTY
+            else:
+                new_state = old_state
+
+            new_area.set(row, column, new_state)
+
+        return new_area
+
     def diff(self, other: 'Area') -> List[Tuple[int, int]]:
         """
         Returns a list of coordinates of the cells which are different between
@@ -166,6 +225,18 @@ def advance_until_stable(area: Area) -> Area:
         area = new_area
 
 
+def advance_until_stable2(area: Area) -> Area:
+    """
+    Evolves the area (using Area.step2) until it stops changing.
+    """
+    while True:
+        new_area = area.step2()
+        if len(new_area.diff(area)) == 0:
+            return new_area
+
+        area = new_area
+
+
 def main():
     with open('./input.txt') as f:
         area = parse_area(f.read())
@@ -173,6 +244,10 @@ def main():
     final_area = advance_until_stable(area)
     final_occ_seats = count_occupied_seats(final_area)
     print(f"Occupied seats: {final_occ_seats}")
+
+    final_area = advance_until_stable2(area)
+    final_occ_seats = count_occupied_seats(final_area)
+    print(f"Occupied seats (part 2): {final_occ_seats}")
 
 
 if __name__ == "__main__":
