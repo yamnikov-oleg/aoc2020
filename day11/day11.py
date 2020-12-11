@@ -14,22 +14,30 @@ class Area:
     # (row, column): state
     # Top-most row is row 0
     # Left-most column is column 0
-    cell_map: Dict[Tuple[int, int], CellState] = field(default_factory=dict)
+    _cell_map: Dict[Tuple[int, int], CellState] = field(default_factory=dict)
+    _max_row_index: int = 0
+    _max_column_index: int = 0
 
     def get(self, row: int, column: int) -> Optional[CellState]:
-        return self.cell_map.get((row, column))
+        return self._cell_map.get((row, column))
 
     def set(self, row: int, column: int, state: CellState):
-        self.cell_map[(row, column)] = state
+        self._cell_map[(row, column)] = state
+
+        if row > self._max_row_index:
+            self._max_row_index = row
+
+        if column > self._max_column_index:
+            self._max_column_index = column
 
     def get_max_row_index(self) -> int:
-        return max(row_ix for row_ix, col_ix in self.cell_map.keys())
+        return self._max_row_index
 
     def get_max_column_index(self) -> int:
-        return max(col_ix for row_ix, col_ix in self.cell_map.keys())
+        return self._max_column_index
 
     def clone(self) -> 'Area':
-        return Area(cell_map=self.cell_map.copy())
+        return Area(_cell_map=self._cell_map.copy())
 
     def __iter__(self) -> Iterator[Tuple[int, int, CellState]]:
         """
